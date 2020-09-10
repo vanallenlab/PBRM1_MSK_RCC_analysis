@@ -4,7 +4,7 @@ library(survival)
 library(ggplot2)
 
 # read in data from authors
-df <- fread("~/Downloads/PBRM1.txt")
+df <- fread("~/Downloads/Hakimi_data.txt")
 
 # rename TTF months and TTF censor column
 names(df)[26:27] <- c("TTF_months", "TTF")
