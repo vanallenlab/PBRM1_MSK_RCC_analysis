@@ -4,7 +4,7 @@ library(survival)
 library(ggplot2)
 
 # read in data from authors
-df <- fread("~/Downloads/Hakimi_data.txt")
+df <- fread("~/Downloads/PBRM1.txt")
 
 # rename TTF months and TTF censor column
 names(df)[26:27] <- c("TTF_months", "TTF")
@@ -56,6 +56,10 @@ fit.coxph
 fit.coxph <- coxph(surv_object ~ drug_class_new, data = df)
 fit.coxph
 
+# Drug Class
+fit.coxph <- coxph(surv_object ~ line, data = df)
+fit.coxph
+
 # Multivariate
 fit.coxph <- coxph(surv_object ~ pbrm1_status + tmb + drug_class_new, data = df)
 fit.coxph
@@ -65,15 +69,15 @@ fit.coxph
 fit.coxph <- coxph(surv_object ~ pbrm1_new, data = df)
 fit.coxph
 
-fit.coxph <- coxph(surv_object ~ pbrm1_status + tmb + drug_class_new, data = df)
+fit.coxph <- coxph(surv_object ~ pbrm1_status + drug_class_new, data = df)
 fit.coxph
 
 
 # log TMB no longer significant predictor
 # with padding to account for TMB = 0 cases
-df$log_tmb <- log((df$tmb + min(df[which(df$tmb > 0), ]$tmb)))
-surv_object <- Surv(df[which(df$log_tmb > 0), ]$TTF_months, df[which(df$log_tmb > 0), ]$TTF)
-fit.coxph <- coxph(surv_object ~ log_tmb, data = df[which(df$log_tmb > 0), ])
+df$log_tmb <- log((df$tmb + 0.5))
+surv_object <- Surv(df$TTF_months, df$TTF)
+fit.coxph <- coxph(surv_object ~ log_tmb, data = df)
 fit.coxph
 
 # and even when just removing those TMB = 0 samples
@@ -105,11 +109,11 @@ print(surv.plot)
 df$tmb_tertile_pbrm1 <- paste0(df$pbrm1_new, " - ", df$tmb_tertile)
 
 fit <- survfit(Surv(TTF_months, TTF) ~ tmb_tertile_pbrm1, 
-               data = df[which(df$tmb_tertile_pbrm1 %in% c("other - 1", "other - 3")), ])
+               data = df[which(df$pbrm1_new != "lof"), ])
 surv_pvalue(fit)
 surv.plot <- ggsurvplot(fit, 
                         conf.int = FALSE,
-                        palette = c("#552583", "#FDB927"),
+                       palette = rev(c("#007A33", "#BA9653", "#963821")),
                         pval = TRUE,
                         risk.table = "absolute") +
   ggtitle("PBRM1 in ccRCC: TTF")
@@ -125,11 +129,10 @@ df[which(df$tmb > quartiles[3]), ]$tmb_quartile <- 4
 df$tmb_quartile_pbrm1 <- paste0(df$pbrm1_new, " - ", df$tmb_quartile)
 
 fit <- survfit(Surv(TTF_months, TTF) ~ tmb_quartile_pbrm1, 
-               data = df[which(df$tmb_quartile_pbrm1 %in% c("other - 1", "other - 4")), ])
+               data = df[which(df$pbrm1_new != "lof"), ])
 surv_pvalue(fit)
 surv.plot <- ggsurvplot(fit, 
                         conf.int = FALSE,
-                        palette = c("#552583", "#FDB927"),
                         pval = TRUE,
                         risk.table = "absolute") +
   ggtitle("PBRM1 in ccRCC: TTF")
